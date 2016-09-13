@@ -63,56 +63,56 @@ int main(int argc, char *argv[]) {
       for (int p = i; p < lip; p++) {
 	cout << ip[p];
       }
-	if (r == 2) {
-	  cout << "\tReduced";
-	} else {
-	  cout << "\tShifted";
+      if (r == 2) {
+	cout << "\tReduced";
+      } else {
+	cout << "\tShifted";
+      }
+      r = 0;
+      //try reducing
+      int k,l;
+      for (k=0; k<stpos; k++) {
+	for (l = 0; l < 10; l++) {
+	  ts[l] = '\0';
 	}
-	r = 0;
-	//try reducing
-	int k,l;
-	for (k=0; k<stpos; k++) {
-	  for (l = 0; l < 10; l++) {
-	    ts[l] = '\0';
-	  }
-	  
-	  int tspos = 0;
-	  for(l = k; l < stpos; l++) {//removing first character
-	    ts[tspos] = stack[l];
-	    tspos++;
-	  }
-	  //now compare each possibility with production
-	  for (int m = 0; m < np; m++) {
-	    int cr = strcmp(ts,g[m].prod);
-	    //if cr is zero then match is found
-	    if (cr == 0) {
-	      for (l = k; l < 10; l++) //removing matched part from stack
-		{
-		  stack[l] = '\0';
-		  stpos--;
-		}
-	      stpos = k;
-	      
-	      //concatinate the string
-	      strcat(stack,g[m].p);
-	      //cout << g[m].p << endl;
-	      //cout << g[m].prod << endl;
-	      if ('A' > g[m].prod[0] || g[m].prod[0] > 'Z') {
-		ans.push_back("( "+(string)g[m].p+" " + (string)g[m].prod+" )");
-	      } else {
-		vector<string>::iterator it = ans.begin();  
-		it = ans.insert(it,"( "+(string)g[m].p);  
-		ans.push_back(" )");	
+	
+	int tspos = 0;
+	for(l = k; l < stpos; l++) {//removing first character
+	  ts[tspos] = stack[l];
+	  tspos++;
+	}
+	//now compare each possibility with production
+	for (int m = 0; m < np; m++) {
+	  int cr = strcmp(ts,g[m].prod);
+	  //if cr is zero then match is found
+	  if (cr == 0) {
+	    for (l = k; l < 10; l++) //removing matched part from stack
+	      {
+		stack[l] = '\0';
+		stpos--;
 	      }
-	      count++;
-	      stpos += strlen(g[m].p);
-	      r = 2;
-	    } 
-	  }
+	    stpos = k;
+	      
+	    //concatinate the string
+	    strcat(stack,g[m].p);
+	    //cout << g[m].p << endl;
+	    //cout << g[m].prod << endl;
+	    if ('A' > g[m].prod[0] || g[m].prod[0] > 'Z') {
+	      ans.push_back("( "+(string)g[m].p+" " + (string)g[m].prod+" )");
+	    } else {
+	      vector<string>::iterator it = ans.begin();  
+	      it = ans.insert(it,"( "+(string)g[m].p);  
+	      ans.push_back(" )");	
+	    }
+	    count++;
+	    stpos += strlen(g[m].p);
+	    r = 2;
+	  } 
 	}
+      }
     }
     
-      //moving input
+    //moving input
     stack[stpos] = ip[i];
     i++; stpos++;
     
@@ -124,6 +124,8 @@ int main(int argc, char *argv[]) {
       cout << ans[i];
     }
   }
+  cout << endl;
+  return 0;
 }
  
 /* OUTPUT
