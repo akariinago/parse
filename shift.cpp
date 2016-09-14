@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     }
     strncpy(g[i].p, ts, n);
     strcpy(g[i].prod, &ts[n+2]);
-    cout << g[i].p << " " << g[i].prod << endl;
+    //cout << g[i].p << " " << g[i].prod << endl;
     i++;
   }
   int np = i;
@@ -48,7 +48,6 @@ int main(int argc, char *argv[]) {
   //moving input
   stack[stpos] = ip[i];
   i++; stpos++;
-  cout << stack[0] << ip[0];
   cout << "\n\nStack\tInput\tAction";
   int count = 0;
   vector<string> ans;
@@ -95,8 +94,6 @@ int main(int argc, char *argv[]) {
 	      
 	    //concatinate the string
 	    strcat(stack,g[m].p);
-	    //cout << g[m].p << endl;
-	    //cout << g[m].prod << endl;
 	    if ('A' > g[m].prod[0] || g[m].prod[0] > 'Z') {
 	      ans.push_back("( "+(string)g[m].p+" " + (string)g[m].prod+" )");
 	    } else {
