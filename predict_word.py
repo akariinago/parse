@@ -22,7 +22,6 @@ class CorpusReader(object):
                     continue
                 morph_info = line.strip().split('\t')
                 sent.append(morph_info)
-        print len(sents)
         train_num = int(len(sents) * 0.9)
         self.__train_sents = sents[:train_num]
         self.__test_sents = sents[train_num:]
@@ -255,7 +254,7 @@ if(input!=""):
     words = sent2tokens(example_sent)
     pretag = ""
     unknown_word = ""
-    rule_file=open(sys.argv[4],"a+")
+    rule_file=open(sys.argv[1],"a+")
     for j in range(2,len(list(labels[0]))):
         pretag += list(labels[0])[j]
     unknown_word += words[0]
