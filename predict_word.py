@@ -258,14 +258,13 @@ if(input!=""):
     rule_file=open(sys.argv[4],"a+")
     for j in range(2,len(list(labels[0]))):
         pretag += list(labels[0])[j]
-        unknown_word += words[0]
+    unknown_word += words[0]
     i = 1
     for label in labels[1:]:
         labell = list(label)
         tag = ""
         for j in range(2,len(labell)):
             tag += labell[j]
-        print pretag,tag
         if(pretag != tag or i == len(labels)-1):
             flag = 0
             for k in range(0, len(gs)):
