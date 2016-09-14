@@ -265,7 +265,7 @@ if(input!=""):
         tag = ""
         for j in range(2,len(labell)):
             tag += labell[j]
-        if(pretag != tag or i == len(labels)-1):
+        if(pretag != tag or i == len(labels)):
             flag = 0
             for k in range(0, len(gs)):
                 gpr = ""
