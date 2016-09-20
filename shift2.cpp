@@ -39,6 +39,17 @@ vector<string> parse(const char *input, vector<string> ip) {
   return ip;
 }
 
+vector<string> make_sdc(vector<string> ans, int m) {
+  if ('A' > g[m].prod[0] || g[m].prod[0] > 'Z') {
+    ans.push_back("( "+(string)g[m].p+" " + (string)g[m].prod+" )");
+  } else {
+    vector<string>::iterator it = ans.begin();  
+    it = ans.insert(it,"( "+(string)g[m].p);  
+    ans.push_back(" )");	
+  }
+  return ans;
+}
+
 int load_rule(char *c) {
   std::ifstream ifs(c);
   if (ifs.fail()) {
@@ -72,6 +83,16 @@ int load_rule(char *c) {
   return i;
 }
 
+void output_result(vector<string> ans, vector<string> stack) {
+  if(stack.size() == 1) {
+    cout << "\n String Accepted\n";
+    for (int i = 0; i < ans.size(); i++) {
+      cout << ans[i];
+    }
+  }
+  cout << endl;
+}
+
 int main(int argc, char *argv[]) {
   //ルールを読み込む
   char *rule_file = argv[1]; 
@@ -93,8 +114,7 @@ int main(int argc, char *argv[]) {
   i++; stpos++;
 
   cout << "\n\nStack\tInput\tAction";
-  int count = 0;
-  vector<string> ans;
+  vector<string> res;
   do {
     int r = 1;
     while (r != 0) {
@@ -131,14 +151,7 @@ int main(int argc, char *argv[]) {
 	      
 	    //concatinate the string
 	    stack.push_back(g[m].p);
-	    if ('A' > g[m].prod[0] || g[m].prod[0] > 'Z') {
-	      ans.push_back("( "+(string)g[m].p+" " + (string)g[m].prod+" )");
-	    } else {
-	      vector<string>::iterator it = ans.begin();  
-	      it = ans.insert(it,"( "+(string)g[m].p);  
-	      ans.push_back(" )");	
-	    }
-	    count++;
+	    res = make_sdc(res,m);
 	    stpos++;
 	    r = 2;
 	  } 
@@ -150,15 +163,10 @@ int main(int argc, char *argv[]) {
     if (i < lip) {
       stack.push_back(ip[i]);
     }
+    
     i++; stpos++;
   } while(stack.size() != 1 && stpos != lip);
-  
-  if(stack.size() == 1) {
-    cout << "\n String Accepted\n";
-    for (int i = 0; i < ans.size(); i++) {
-      cout << ans[i];
-    }
-  }
-  cout << endl;
+
+  output_result(res, stack);
   return 0;
 }
