@@ -14,31 +14,33 @@ struct grammer{
 } g[20];
 
 template <typename List>
-void split(const std::string& s, const std::string& delim, List& result)
-{
-    result.clear();
-    string::size_type pos = 0;
+void split(const std::string& s, const std::string& delim, List& result) {
+  result.clear();
+  string::size_type pos = 0;
 
-    while(pos != string::npos )
-    {
-        string::size_type p = s.find(delim, pos);
-
-        if(p == string::npos)
-        {
-            result.push_back(s.substr(pos));
-            break;
-        }
-        else {
-            result.push_back(s.substr(pos, p - pos));
-        }
-
-        pos = p + delim.size();
+  while(pos != string::npos ) {
+      string::size_type p = s.find(delim, pos); 
+      if(p == string::npos) {
+	result.push_back(s.substr(pos));
+	break;
+      } else {
+	result.push_back(s.substr(pos, p - pos));
+      }
+      pos = p + delim.size();
     }
 }
 
-int main(int argc, char *argv[]) {
-  //ルールを読み込む
-  std::ifstream ifs(argv[1]);
+vector<string> parse(const char *input, vector<string> ip) {
+  MeCab::Tagger *tagger = MeCab::createTagger("-Owakati");
+  const char *result = tagger->parse(input);
+  split(result, " ", ip);
+  ip.pop_back();
+  
+  return ip;
+}
+
+int load_rule(char *c) {
+  std::ifstream ifs(c);
   if (ifs.fail()) {
     std::cerr << "Failed" << std::endl;
     return -1;
@@ -62,30 +64,29 @@ int main(int argc, char *argv[]) {
     ts2 = "";
     for (int j = n+2; j < strlen(ts); j++) {
       ts2 +=  ts[j];
-}
+    }
     g[i].prod = ts2;
     cout << g[i].p << ":" << g[i].prod << endl;
     i++;
   }
+  return i;
+}
 
-  int np = i;
+int main(int argc, char *argv[]) {
+  //ルールを読み込む
+  char *rule_file = argv[1]; 
+  int np = load_rule(rule_file);
+
   char input[50];
   cout << "\nEnter Input:";
   cin >> input;
   vector<string> ip;
-  MeCab::Tagger *tagger = MeCab::createTagger("-Owakati");
-  const char *result = tagger->parse(input);
-  split(result, " ", ip);
-  ip.pop_back();
+  ip = parse(input,ip);
   int lip = ip.size();
-  for(int j = 0; j < ip.size(); j++){
-    cout << ip[j] << " "; 
-  }
-  cout << lip << endl; 
-  vector<string> stack;
-  
+
+  vector<string> stack;  
   int stpos = 0;
-  i = 0;
+  int i = 0;
   
   //moving input
   stack.push_back(ip[i]);
@@ -114,7 +115,7 @@ int main(int argc, char *argv[]) {
       //try reducing
       int k,l;
       for (k=0; k<stpos; k++) {
-	ts2 = "";
+	string ts2 = "";
 	for(l = k; l < stack.size(); l++) {//removing first character
 	  ts2 += stack[l];
 	  }
@@ -147,11 +148,9 @@ int main(int argc, char *argv[]) {
     
     //moving input
     if (i < lip) {
-      cout << ip[i] << endl;
       stack.push_back(ip[i]);
     }
     i++; stpos++;
-    cout << stack.size() << " " << stpos << " " << lip << endl; 
   } while(stack.size() != 1 && stpos != lip);
   
   if(stack.size() == 1) {
@@ -163,35 +162,3 @@ int main(int argc, char *argv[]) {
   cout << endl;
   return 0;
 }
- 
-/* OUTPUT
- 
- 
-Enter Number of productions:4
- 
-Enter productions:
-E->E+E
-E->E*E
-E->(E)
-E->a
- 
-Enter Input:(a+a)*a
- 
- 
-Stack   Input   Action
-(       a+a)*a  Shifted
-(a      +a)*a   Shifted
-(E      +a)*a   Reduced
-(E+     a)*a    Shifted
-(E+a    )*a     Shifted
-(E+E    )*a     Reduced
-(E      )*a     Reduced
-(E)     *a      Shifted
-E       *a      Reduced
-E*      a       Shifted
-E*a             Shifted
-E*E             Reduced
-E               Reduced
- String Accepted
- 
-*/
