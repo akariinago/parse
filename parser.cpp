@@ -20,6 +20,7 @@ struct grammer{
 class Item {       
   vector<string> stack;
   vector<string> queue;  
+  vector<string> pos;
   vector<string> features;  
   vector<string> ans;
   int score;
@@ -40,6 +41,7 @@ public:
   string get_queue(int n) {return queue[n];}
   vector<string> get_ans() {return ans;}
   void set_ans(vector<string> a) {ans = a;}
+  void set_pos(vector<string> p) {pos = p;}
   void print_stack() {
     cout << "stack";
     for (int i = 0; i < stack.size(); i++) {
@@ -54,18 +56,26 @@ public:
   }
   vector<string> construct_features() {
     if(!stack.empty()) {
+      features.push_back("ST_p." + pos[stack.size()-1]);
       features.push_back("ST_w." + stack.back());
+      features.push_back("ST_p_w." +  pos[stack.size()-1] + stack.back());
     } else {
       features.push_back("ST_e");
     }
     if(!queue.empty()) {
+      features.push_back("N0_p." + pos[pos.size()-queue.size()-1]);
       features.push_back("N0_w." + queue.front());
+      features.push_back("N0_p_w."  + pos[pos.size()-queue.size()-1] + queue.front());
       if (!stack.empty()) {
-	features.push_back("ST_p_w_N0_w_." + stack.back() + queue.front());
+	features.push_back("ST_p_w_N0_p_w_." + pos[stack.size()-1] + stack.back() + pos[pos.size()-queue.size()-1] + queue.front());
+	features.push_back("ST_p_w_N0_w_." + pos[stack.size()-1] + stack.back() + queue.front());
+	features.push_back("ST_p_N0_p." + pos[stack.size()-1] + pos[pos.size()-queue.size()-1]);
       }
     }
     if(queue.size() > 1){
-      features.push_back("N1_w." + queue[queue.size()-2]);
+      features.push_back("N1_p." + pos[pos.size()-queue.size()]);
+      features.push_back("N1_w." + queue[1]);
+      features.push_back("N1_p_w." + pos[pos.size()-queue.size()] + queue[1]);
     }
     return features;
   }
@@ -178,11 +188,23 @@ void split(const std::string& s, const std::string& delim, List& result) {
     }
 }
 
-vector<string> parse(const char *input, vector<string> ip) {
-  MeCab::Tagger *tagger = MeCab::createTagger("-Owakati");
+vector<string> parse(const char *input, vector<string> ip, int num) {
+  MeCab::Tagger *tagger = MeCab::createTagger("");
   const char *result = tagger->parse(input);
-  split(result, " ", ip);
-  ip.pop_back();
+  vector<string> lines;
+  vector<string> line;
+  vector<string> pos;
+  split(result, "\n", lines);
+  for (int i = 0; i < lines.size()-2; i++) {
+    split(lines[i], "\t", line);
+    if (num) { 
+      ip.push_back(line[0]);
+    } else {
+      split(line[1], ",", pos);
+      ip.push_back(pos[0]);
+    }
+  }
+  delete tagger;
   return ip;
 }
 
@@ -270,7 +292,9 @@ int main(int argc, char *argv[]) {
   cout << "\nEnter Input:";
   cin >> input;
   vector<string> ip;
-  ip = parse(input,ip);
+  vector<string> pos;
+  ip = parse(input,ip, 1);
+  pos = parse(input,ip, 0);
   int lip = ip.size();
   int stpos = 0;
   int i = 0;
@@ -280,6 +304,7 @@ int main(int argc, char *argv[]) {
   vector<string> a;
   start_item.set_queue(ip);
   start_item.set_stack(s);
+  start_item.set_pos(pos);
   start_item.set_score(0);
   start_item.set_flag(0);
   //moving input
