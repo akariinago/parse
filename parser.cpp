@@ -90,22 +90,25 @@ vector<string> make_sdc(vector<string> ans, int m) {
   return ans;
 }
 
-Item shift(Item item) {
-    vector<string> s = item.get_stack();
-    vector<string> q = item.get_queue();
-    if (!q.empty()) {
+vector<Item> shift(Item item) {
+  vector<Item> items;
+  vector<string> s = item.get_stack();
+  vector<string> q = item.get_queue();
+  if (!q.empty()) {
     s.push_back(q[0]);
     item.set_stack(s);
     q.erase(q.begin());
     item.set_queue(q);
-    } else {
-      item.set_flag(1);
-    }
-  return item;
+  } else {
+    item.set_flag(1);
+  }
+  items.push_back(item);
+  return items;
 }
 
-Item reduce(Item item) {
+vector<Item> reduce(Item item) {
   vector<string> s = item.get_stack();
+  vector<Item> items;
   //concatinate the string
   int flag = 0;
   string ts = "";
@@ -136,16 +139,19 @@ Item reduce(Item item) {
       item.set_stack(s);
       vector<string> a = item.get_ans();
       item.set_ans(make_sdc(a,m));
+      items.push_back(item);
+      s.pop_back();
       flag = 1;
     }
  }
   if(!flag) {
     item.set_flag(1);
+    items.push_back(item);
   }
-  return item;
+  return items;
 } 
 
- Item apply(int i,Item item) {
+vector<Item> apply(int i,Item item) {
   if (i == 0) {
     //cout << "shift" << endl;
     return shift(item);
@@ -277,8 +283,8 @@ int main(int argc, char *argv[]) {
   start_item.set_score(0);
   start_item.set_flag(0);
   //moving input
-  start_item = shift(start_item);    
-  //cout << "\n\nStack\tInput\tAction";
+  start_item = shift(start_item)[0];    
+  //cout << "\n\nStack\tInput\tAction" << endl;
   vector<Item> deque; //agenda
   Item res; //candidate_output
   int score = 0;
@@ -288,20 +294,23 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < deque.size(); i++) {
       Item item = deque[i];
       for (int j = 0; j < 2; j++) {
-	Item new_item = apply(j,item);
-	if (new_item.get_flag()) {// もしactionがitemに適用できなかったらスルー
-	  continue;
-	}
-	int new_score = item.get_score() + compute_score(new_item.construct_features(),weights,j);
-	new_item.set_score(new_score);
-	vector<string> s = new_item.get_stack();
-	if (s[0] == "E" && s.size()) {     
-	  if (res.get_stack().empty() || new_score > score) {
-	    res = new_item; // candidate_outputを更新
-	    score = new_score; 
+	vector<Item> new_items = apply(j,item);
+	for (int k = 0; k < new_items.size(); k++) {
+	  Item new_item = new_items[k];
+	  if (new_item.get_flag()) {// もしactionがitemに適用できなかったらスルー
+	    continue;
 	  }
-	} else {
-	  lst.push_back(new_item); // 途中経過なのでリストにitemを追加
+	  int new_score = item.get_score() + compute_score(new_item.construct_features(),weights,j);
+	  new_item.set_score(new_score);
+	  vector<string> s = new_item.get_stack();
+	  if (s[0] == "E" && s.size()) {     
+	    if (res.get_stack().empty() || new_score > score) {
+	      res = new_item; // candidate_outputを更新
+	      score = new_score; 
+	    }
+	  } else {
+	    lst.push_back(new_item); // 途中経過なのでリストにitemを追加
+	  }
 	}
       }
     }
