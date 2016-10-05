@@ -92,6 +92,18 @@ void write_weights(map <string, vector<int> > weights, char *c) {
   }
 }
 
+void write_samples(map <vector<string>, int > samples, char *c) {
+  std::ofstream writing_file(c);
+  for (map <vector<string>, int > ::iterator it = samples.begin(); it != samples.end(); ++it) {
+    vector<string> features = it->first;
+    for (int i = 0; i < features.size(); i++) {
+      writing_file << features[i] << ",";
+    }
+    writing_file << it->second;
+    writing_file << endl;
+  }
+}
+
 map <vector<string>, int > make_examples(vector <vector <string> > words, vector<int> labels) {
   map <vector<string>, int > examples;
   for (int i = 0; i < labels.size(); i++) {
@@ -103,11 +115,13 @@ int main(int argc, char *argv[]) {
   char *words_file = argv[1]; 
   char *labels_file = argv[2]; 
   char *sample_file = argv[3]; 
+  char *empty_weights_file = argv[4]; 
   int cl = 2;
   vector <vector <string> > words = load_words(words_file);
   vector<int> labels = load_labels(labels_file);
   map <vector<string>, int > examples = make_examples(words, labels);
   map <string, vector<int> > empty_weights = init_weights(examples, cl);
-  write_weights(empty_weights, sample_file);
+  write_samples(examples, sample_file);
+  write_weights(empty_weights, empty_weights_file);
   return 0;
 }
