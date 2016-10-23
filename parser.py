@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Train a shift-reduce parser, parse SDC from command"""
 import argparse
+import codecs
 import collections
 from itertools import chain
 import MeCab
@@ -16,7 +17,6 @@ from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelBinarizer
 import sys
 import time
-
 
 class CorpusReader(object):
 
@@ -447,7 +447,99 @@ def output_res(res):
     for r in res:
         sys.stdout.write(r)
     print
+
+def analyse(text):
+    list = []
+    mecab = MeCab.Tagger() ## MeCabのインスタンス作成
+    node = mecab.parseToNode(text) ## 解析を実行
+    while node:
+        # surface : 形態素の文字列情報
+        # feature : 素性情報
+        
+        """
+        #そのまま出力
+        print node.surface, node.feature
+        
+        """
+        sub_list = []
+        if (node.feature.split(",")[0]!="BOS/EOS"):
+            sub_list.append(node.surface)
+            for i in range(0,9):
+                sub_list.append(node.feature.split(",")[i])
+            list.append(sub_list)
+        node = node.next
+    return list
     
+def predict_word(input):
+    c = CorpusReader("corpus.txt")
+    train_sents = c.iob_sents('train')
+    test_sents = c.iob_sents('test')
+
+    # 文からの素性抽出
+    X_train = [sent2features(s) for s in train_sents]
+    y_train = [sent2labels(s) for s in train_sents]
+    
+    X_test = [sent2features(s) for s in test_sents]
+    y_test = [sent2labels(s) for s in test_sents]
+    
+    # モデルの学習
+    trainer = pycrfsuite.Trainer(verbose=False)
+
+    for xseq, yseq in zip(X_train, y_train):
+        trainer.append(xseq, yseq)
+
+    trainer.set_params({
+        'c1': 1.0,   # coefficient for L1 penalty
+        'c2': 1e-3,  # coefficient for L2 penalty
+        'max_iterations': 50,  # stop earlier
+        
+        # include transitions that are possible, but not observed
+        'feature.possible_transitions': True
+    })
+        
+    trainer.train('model.crfsuite')
+    
+    # 未知語の予測
+    tagger = pycrfsuite.Tagger()
+    tagger.open('model.crfsuite')
+    
+    example_sent = analyse(input)
+    print(' '.join(sent2tokens(example_sent)))
+    labels = tagger.tag(sent2features(example_sent))
+    words = sent2tokens(example_sent)
+    pretag = ""
+    unknown_word = ""
+
+    for j in range(2,len(list(labels[0]))):
+        pretag += list(labels[0])[j]
+    unknown_word += words[0]
+    i = 1
+    for label in labels[1:]:
+        label_list = list(label)
+        tag = ""
+        for j in range(2,len(label_list)):
+            tag += label_list[j]
+        if(pretag != tag or i == len(labels)):
+            flag = 0
+            for k in range(0, len(p)):
+                gpr = ""
+                for l in range(0, len(prod)):
+                    gpr += prod[l]
+                if unknown_word == gpr:
+                    flag = 1 
+            if flag == 0:
+                print pretag, unknown_word
+                p.append(pretag)
+                prod.append(unknown_word)
+            pretag = tag
+            unknown_word = words[i]
+        else:
+            unknown_word += words[i]
+        i += 1
+            
+    print("Predicted:", ' '.join(tagger.tag(sent2features(example_sent))))
+    return p, prod
+
 if __name__ == "__main__":
     # Mode for training a log-linear model
     #[[1:"feature1", 2:"feature2", 3:"feature3"]]
@@ -461,13 +553,15 @@ if __name__ == "__main__":
     input = raw_input()
     phrases, pos = parse(input)
     p, prod = pickle.load(open("rules.pickle"))
+
+    #未知語の追加
+    p, prod = predict_word(input)
+
     beam_size = 20
     res = shift_reduce(phrases, pos, p, prod, beam_size, classifier, dic_data)
 
     #SDCが作られなかった場合未知語の処理をする
     if (res is None):
-        #predict_word()
-        #print res
         print "Not_found"
     else:
         output_res(res.res)
